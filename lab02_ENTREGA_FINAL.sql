@@ -1,20 +1,12 @@
 /* LAB 02 - A Manhã mais agitada da www.clinicaveterinaria.cão
    DISCIPLINA: Banco de Dados (Engenharia de Software)
    AUTOR: [Cássia Irene, Leonardo Ferreira, Melissa Wolff]
-   DATA: 22/abr/2026
 */
 
 -- =============================================================================
 -- 1. CRIAÇÃO DO BANCO E DAS TABELAS (DDL)
 -- =============================================================================
 
-DROP TABLE IF EXISTS vacina_aplicada;
-DROP TABLE IF EXISTS vacina_catalogo;
-DROP TABLE IF EXISTS consulta;
-DROP TABLE IF EXISTS animal;
-DROP TABLE IF EXISTS veterinario;
-DROP TABLE IF EXISTS tutor;
-DROP TABLE IF EXISTS especie;
 
 CREATE TABLE especie (
     id_especie SERIAL PRIMARY KEY,
