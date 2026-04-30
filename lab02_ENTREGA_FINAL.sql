@@ -253,14 +253,33 @@ INSERT INTO animal (nome, id_especie, cpf_tutor, data_nasc, peso, sexo) VALUES
 -- 4. DISCUSSÃO FINAL
 
 /*
-• Qual foi o evento mais difícil? Por quê?
-R: O evento das 11h00 (LGPD). Foi o mais difícil porque exigiu uma decisão arquitetural. Fazer um simples DELETE CASCADE deletaria as consultas da Eliane, prejudicando o caixa do Dr. Eduardo no fim do mês e o histórico do veterinário que aplicou vacinas. A saída técnica viável foi aplicar a anonimização dos dados por meio de UPDATEs, preservando a chave e a integridade referencial, mas ocultando PII (Personally Identifiable Information).
+1. Desafio com LGPD (evento das 11h)
 
-• Onde vocês discordaram dentro do grupo? Como decidiram?
-R: Discordamos no evento das 11h55. Havia a tentação de classificar o coelho apenas como "Roedor" pela agilidade no atendimento de balcão (opção a). Porém, decidimos pela opção (b), criando "Lagomorfo", argumentando que dados sujos criados por pressa na recepção geram débitos técnicos no banco e atrapalham relatórios médicos no futuro.
+O das 11h00 foi o ponto mais delicado do trabalho. A ideia inicial era usar DELETE CASCADE para remover os dados da cliente Eliane Rodrigues, mas logo percebemos que isso apagaria também consultas e registros de vacinas. Isso impactaria diretamente o financeiro da clínica e o histórico sanitário, o que não faz sentido na prática.
 
-• Se a Dra. Marina pedir a "lista de gatos" toda semana, o que seria legal colocar no banco pra ninguém precisar reescrever o SELECT toda vez?
-R: A melhor solução seria criar uma VIEW no banco de dados. 
-Exemplo: CREATE VIEW vw_lista_gatos AS SELECT a.nome, t.nome AS tutor, t.telefone ... 
-Assim, a recepcionista poderia consultar a lista semanalmente rodando apenas um SELECT simples: SELECT * FROM vw_lista_gatos;
+A solução que encontramos foi anonimizar os dados pessoais (nome, telefone, etc.), mantendo os registros no banco. Assim, conseguimos atender a LGPD sem perder informações importantes para auditoria e operação da clínica. Foi um ponto interessante porque mostrou que nem sempre a solução mais direta (deletar tudo) é a mais correta.
+
+2. Classificação da espécie (evento das 11h55)
+
+Aqui rolou uma pequena discussão no grupo. Uma opção era classificar o coelho como roedor para simplificar, mas isso geraria um dado incorreto logo na base. A outra opção era criar a espécie "Lagomorfo".
+
+Decidimos criar a nova espécie. Pode parecer um detalhe pequeno, mas entendemos que esse tipo de decisão impacta no futuro. Se a clínica precisar filtrar ou aplicar algum protocolo específico por espécie, ter dados corretos desde o início evita problemas maiores depois.
+
+3. Consultas recorrentes e melhoria do banco
+
+Pensando no uso do sistema no dia a dia, percebemos que algumas consultas vão se repetir bastante, como a lista de gatos solicitada pela Dra. Marina.
+
+Para evitar reescrever a mesma query toda vez, vimos que faz sentido usar uma VIEW. Isso permite salvar a consulta no banco e reutilizar de forma simples:
+
+CREATE VIEW vw_lista_gatos AS
+    SELECT a.nome AS nome_animal, t.nome AS tutor, t.telefone
+    FROM animal a
+    JOIN tutor t ON a.cpf_tutor = t.cpf
+    JOIN especie e ON a.id_especie = e.id_especie
+    WHERE e.nome = 'Gato';
+
+Depois disso, basta rodar:
+SELECT * FROM vw_lista_gatos;
+
+Isso reduz erro, melhora a organização e facilita para quem vai usar o sistema no dia a dia.
 */
