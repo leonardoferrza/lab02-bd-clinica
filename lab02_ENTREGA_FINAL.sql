@@ -1,12 +1,6 @@
-/* LAB 02 - A Manhã mais agitada da www.clinicaveterinaria.cão
-   DISCIPLINA: Banco de Dados (Engenharia de Software)
-   AUTOR: [Cássia Irene, Leonardo Ferreira, Melissa Wolff]
-*/
+--Alunos: Cássia Irene, Leonardo Ferreira, Melissa Wolff
 
--- =============================================================================
--- 1. CRIAÇÃO DO BANCO E DAS TABELAS (DDL)
--- =============================================================================
-
+-- 1. CRIAÇÃO DO BANCO E DAS TABELAS
 
 CREATE TABLE especie (
     id_especie SERIAL PRIMARY KEY,
@@ -73,9 +67,7 @@ CREATE TABLE vacina_aplicada (
     CONSTRAINT fk_vac_vet FOREIGN KEY (id_vet) REFERENCES veterinario (id_vet)
 );
 
--- =============================================================================
--- 2. CARGA INICIAL DE DADOS (DML)
--- =============================================================================
+-- 2. CARGA INICIAL DE DADOS
 
 -- Espécies Iniciais
 INSERT INTO especie (nome) VALUES ('Cachorro'), ('Gato'), ('Ave'), ('Roedor'), ('Réptil');
@@ -113,7 +105,7 @@ INSERT INTO vacina_catalogo (nome, fabricante, validade_meses) VALUES
 ('Tríplice Felina', 'Virbac', 12),
 ('Leucemia Felina', 'Boehringer', 12);
 
--- Vacinas Aplicadas (Usando subconsultas para manter a robustez caso os IDs mudem)
+-- Vacinas Aplicadas
 INSERT INTO vacina_aplicada (id_animal, id_vacina, id_vet, data_aplicacao, lote) VALUES 
 ((SELECT id_animal FROM animal WHERE nome='Thor' AND cpf_tutor='111.222.333-44'), (SELECT id_vacina FROM vacina_catalogo WHERE nome='V10'), 1, '2025-06-15', 'L2025-V10-A1'),
 ((SELECT id_animal FROM animal WHERE nome='Thor' AND cpf_tutor='111.222.333-44'), (SELECT id_vacina FROM vacina_catalogo WHERE nome='Antirrábica'), 1, '2025-06-15', 'L2025-ANT-A3'),
@@ -137,17 +129,23 @@ INSERT INTO consulta (id_animal, id_vet, data_consulta, motivo, valor, status) V
 ((SELECT id_animal FROM animal WHERE nome='Lila'), 3, '2026-04-15', 'Problema de pele', 180.00, 'Cancelada'),
 ((SELECT id_animal FROM animal WHERE nome='Apolo'), 2, '2026-04-22', 'Castração', 450.00, 'Agendada');
 
--- =============================================================================
 -- 3. A MANHÃ MAIS AGITADA (Eventos das 08h12 às 11h55)
--- =============================================================================
 
--- [08h12] Evento 1: Carol atende Luciana na recepção e faz pré-cadastro.
--- Comentário: Inserindo apenas os dados iniciais fornecidos.
+/*
+[08h12] Evento 1: Carol atende Luciana na recepção e faz pré-cadastro.
+
+Comentário: Inserindo apenas os dados iniciais fornecidos.
+*/
+
 INSERT INTO tutor (cpf, nome, cidade, data_cadastro) 
 VALUES ('777.888.999-00', 'Luciana Matos', 'São Luís', CURRENT_DATE);
 
--- [08h30] Evento 2: Luciana chega, passa contatos e cadastra 3 animais.
--- Comentário: Primeiro fazemos o UPDATE no tutor, depois os INSERTs na tabela animal.
+/*
+[08h30] Evento 2: Luciana chega, passa contatos e cadastra 3 animais.
+
+Comentário: Primeiro fazemos o UPDATE no tutor, depois os INSERTs na tabela animal.
+*/
+
 UPDATE tutor 
 SET telefone = '(98) 99888-7766', email = 'luciana.matos@email.com' 
 WHERE cpf = '777.888.999-00';
@@ -157,31 +155,48 @@ INSERT INTO animal (nome, id_especie, cpf_tutor, data_nasc, peso, sexo) VALUES
 ('Formiga', (SELECT id_especie FROM especie WHERE nome='Cachorro'), '777.888.999-00', '2024-01-10', 8.00, 'Fêmea'),
 ('Moranguinho', (SELECT id_especie FROM especie WHERE nome='Gato'), '777.888.999-00', '2023-02-15', 5.00, 'Macho');
 
--- [09h00] Evento 3: Dra. Marina transfere a castração do Apolo.
--- Comentário: Alterando a data para o dia 24/04/2026.
+/*
+[09h00] Evento 3: Dra. Marina transfere a castração do Apolo.
+
+Comentário: Alterando a data para o dia 24/04/2026.
+*/
+
 UPDATE consulta 
 SET data_consulta = '2026-04-24' 
 WHERE id_animal = (SELECT id_animal FROM animal WHERE nome='Apolo' AND cpf_tutor='555.666.777-88') 
   AND motivo = 'Castração' 
   AND status = 'Agendada';
 
--- [09h25] Evento 4: Atualização de dados do Carlos Eduardo.
--- Comentário: UPDATE simples buscando pelo CPF ou Nome do tutor revoltado.
+/*
+[09h25] Evento 4: Atualização de dados do Carlos Eduardo.
+
+Comentário: UPDATE simples buscando pelo CPF ou Nome do tutor revoltado.
+*/
+
 UPDATE tutor 
 SET telefone = '(98) 98111-2222', email = 'carlos.silva2026@email.com' 
 WHERE cpf = '222.333.444-55';
 
--- [09h45] Evento 5: Lista de gatos para campanha da Dra. Marina.
--- Comentário: JOIN entre animal, especie e tutor filtrando apenas por 'Gato'.
+/*
+[09h45] Evento 5: Lista de gatos para campanha da Dra. Marina.
+
+Comentário: JOIN entre animal, especie e tutor filtrando apenas por 'Gato'.
+*/
+
 SELECT a.nome AS Nome_Animal, t.nome AS Tutor, t.telefone AS Contato
 FROM animal a
 JOIN tutor t ON a.cpf_tutor = t.cpf
 JOIN especie e ON a.id_especie = e.id_especie
 WHERE e.nome = 'Gato';
 
--- [10h10] Evento 6: Carol pede duas listas para fechamento do caixa.
--- Comentário: Primeira query filtra pelo mês 3 (Março). Segunda usa ILIKE para pegar qualquer castração.
--- Lista 1: Consultas de março
+/*
+[10h10] Evento 6: Carol pede duas listas para fechamento do caixa.
+
+Comentário: Primeira query filtra pelo mês 3 (Março). Segunda usa ILIKE para pegar qualquer castração.
+
+Lista 1: Consultas de março
+*/
+
 SELECT data_consulta, motivo, valor 
 FROM consulta 
 WHERE EXTRACT(MONTH FROM data_consulta) = 3;
@@ -191,15 +206,22 @@ SELECT data_consulta, motivo, valor
 FROM consulta 
 WHERE motivo ILIKE '%Castração%';
 
--- [10h40] Evento 7: Auditoria da Dona Regina.
--- Comentário: Buscando faixa de valores e status específico.
+/*
+[10h40] Evento 7: Auditoria da Dona Regina.
+
+Comentário: Buscando faixa de valores e status específico.
+*/
+
 SELECT data_consulta, motivo, valor, status
 FROM consulta
 WHERE status = 'Realizada' AND valor BETWEEN 100.00 AND 300.00;
 
--- [11h00] Evento 8: O ataque de fúria e o desafio da LGPD (Eliane Rodrigues).
--- Comentário: Em vez de usar DELETE e destruir o registro financeiro nas consultas e histórico de vacinas (exclusão em cascata), 
--- optamos por ANONIMIZAR os dados sensíveis. Assim, cumprimos a LGPD sem quebrar as estatísticas e finanças da clínica.
+/*
+[11h00] Evento 8: O ataque de fúria e o desafio da LGPD (Eliane Rodrigues).
+
+Comentário: Em vez de usar DELETE e destruir o registro financeiro nas consultas e histórico de vacinas (exclusão em cascata), optamos por ANONIMIZAR os dados sensíveis. Assim, cumprimos a LGPD sem quebrar as estatísticas e finanças da clínica.
+*/
+
 UPDATE tutor 
 SET nome = 'TUTOR ANONIMIZADO (LGPD)', telefone = 'APAGADO', email = 'APAGADO', cidade = 'APAGADO' 
 WHERE cpf = '555.666.777-88';
@@ -208,22 +230,28 @@ UPDATE animal
 SET nome = 'ANIMAL ANONIMIZADO (LGPD)' 
 WHERE cpf_tutor = '555.666.777-88';
 
--- [11h30] Evento 9: Carol pede atualização em bloco de consultas atrasadas.
--- Comentário: Tudo que for anterior à data de hoje (22/04) e estiver agendado, vira 'Realizada'.
+/*
+[11h30] Evento 9: Carol pede atualização em bloco de consultas atrasadas.
+
+Comentário: Tudo que for anterior à data de hoje (22/04) e estiver agendado, vira 'Realizada'.
+*/
+
 UPDATE consulta 
 SET status = 'Realizada' 
 WHERE data_consulta < CURRENT_DATE AND status = 'Agendada';
 
--- [11h55] Evento 10: Luciana tenta cadastrar um coelho.
--- Comentário (Decisão b): Optamos por criar a espécie "Lagomorfo" para manter a estrutura técnica correta do sistema e evitar problemas futuros de triagem.
-INSERT INTO especie (nome) VALUES ('Lagomorfo');
+/*
+[11h55] Evento 10: Luciana tenta cadastrar um coelho.
 
+Comentário (Decisão b): Optamos por criar a espécie "Lagomorfo" para manter a estrutura técnica correta do sistema e evitar problemas futuros de triagem.
+*/
+
+INSERT INTO especie (nome) VALUES ('Lagomorfo');
 INSERT INTO animal (nome, id_especie, cpf_tutor, data_nasc, peso, sexo) VALUES 
 ('Banana', (SELECT id_especie FROM especie WHERE nome='Lagomorfo'), '777.888.999-00', '2024-05-03', 1.20, 'Macho');
 
--- =============================================================================
 -- 4. DISCUSSÃO FINAL
--- =============================================================================
+
 /*
 • Qual foi o evento mais difícil? Por quê?
 R: O evento das 11h00 (LGPD). Foi o mais difícil porque exigiu uma decisão arquitetural. Fazer um simples DELETE CASCADE deletaria as consultas da Eliane, prejudicando o caixa do Dr. Eduardo no fim do mês e o histórico do veterinário que aplicou vacinas. A saída técnica viável foi aplicar a anonimização dos dados por meio de UPDATEs, preservando a chave e a integridade referencial, mas ocultando PII (Personally Identifiable Information).
